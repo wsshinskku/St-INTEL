@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "Please cite the associated manuscript and identify the repository revision used in your experiments."
+title: "St-INTEL: a manuscript-based reference implementation"
+type: software
+authors:
+  - family-names: Shin
+    given-names: Wooseok
+repository-code: "https://github.com/wsshinskku/St-INTEL"
+url: "https://wsshinskku.github.io/research/St-INTEL/"
+license: MIT
+keywords:
+  - Open RAN
+  - Intent-aware resource allocation
+  - Stackelberg guidance
+  - Shadow pricing
+  - Federated reinforcement learning
+preferred-citation:
+  type: unpublished
+  title: "St-INTEL: Stackelberg-Intent Enhanced Learning based Resource Allocation in 5G Open RAN"
+  authors:
+    - family-names: Shin
+      given-names: Wooseok
+    - family-names: Yang
+      given-names: Janghoon
+    - family-names: Shen
+      given-names: Zhiqiang
+    - family-names: Choi
+      given-names: Minseok
+    - family-names: Shin
+      given-names: Jitae
+  year: 2026
+  notes: "Manuscript under review at Computer Communications; acceptance and DOI are not established."
+  url: "https://github.com/wsshinskku/St-INTEL"

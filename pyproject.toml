@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "st-intel"
+version = "0.1.0"
+description = "Stackelberg intent-guided DDQN and federated resource requests in Open RAN"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Wooseok Shin"}]
+dependencies = ["numpy>=1.24,<3", "scipy>=1.11,<2", "torch>=2.4,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.9,<1"]
+
+[project.scripts]
+st-intel = "st_intel.cli:main"
+
+[project.urls]
+Repository = "https://github.com/wsshinskku/St-INTEL"
+Research = "https://wsshinskku.github.io/research/St-INTEL/"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
