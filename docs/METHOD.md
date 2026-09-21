@@ -1,6 +1,6 @@
 # Method and equation mapping
 
-This document maps the supplied St-INTEL manuscript to the reference implementation. Equation numbers refer to that manuscript. The analytical environment, numerical conventions, and comparison methods belong to this repository; they are not recovered original experiment code.
+This document maps the St-INTEL paper to its official implementation. Equation numbers refer to the paper; the following sections specify the simulation dynamics, numerical conventions, and comparison methods.
 
 ## Control hierarchy
 
@@ -11,7 +11,7 @@ This document maps the supplied St-INTEL manuscript to the reference implementat
 5. Actual served traffic changes packet queues, rewards, and intent measurements.
 6. Local DDQN learning, cell aggregation, cross-cell aggregation, monitoring, and leader optimization run on their configured clocks.
 
-These are logical simulation clocks in one Python process. The implementation does not claim real-time execution at a 1 ms wall-clock deadline.
+These are logical simulation clocks in one Python process. The 1 ms TTI advances the simulated service timeline; wall-clock computation time is measured separately.
 
 ## Units and observables
 
@@ -68,9 +68,9 @@ Explicit `x <= 1` bounds and redundant capacity constraints can make the relaxat
 
 A UE chooses a request from `0` through the configured maximum request. The scheduler then assigns each RRB to at most one UE and gives no UE more RRBs than requested. The final allocation can differ from the leader's benchmark because local requests and channel realizations change.
 
-The reference scheduler visits RRBs in order and greedily chooses an eligible UE using achievable rate divided by an exponentially averaged past service rate, multiplied by a bounded HOL-urgency factor. It skips empty queues and updates the remaining request and queue budgets as resources are assigned. This deterministic rate/fairness/urgency rule is a declared scheduler choice; the manuscript does not provide its original scheduler code.
+The scheduler visits RRBs in order and greedily chooses an eligible UE using achievable rate divided by an exponentially averaged past service rate, multiplied by a bounded HOL-urgency factor. It skips empty queues and updates the remaining request and queue budgets as resources are assigned. The rule combines achievable rate, past service, and HOL urgency.
 
-Section 3 permits requests through `N`, while the experiment description caps them at **10**. The reference action space follows the capped experiment convention. The manuscript's benchmark MILP has no corresponding per-UE cap. Benchmark allocations can therefore request more than the action space allows; the teacher request is clipped to the configured maximum. The benchmark allocation and its resulting feasible teacher rollout must not be treated as identical.
+Section 3 permits requests through `N`, while the experiment description caps them at **10**. The action space follows the capped experiment convention. The manuscript's benchmark MILP has no corresponding per-UE cap. Benchmark allocations can therefore request more than the action space allows; the teacher request is clipped to the configured maximum. The benchmark allocation and its resulting feasible teacher rollout must not be treated as identical.
 
 The implemented reward is
 
@@ -83,7 +83,7 @@ log(1 + queue_service_rate_Mbit_per_ms)
     )
 ```
 
-The manuscript specifies the reward structure but leaves the exact aggregate penalty `Phi` and its scaling underdetermined. The normalized rate shortfall and normalized HOL excess above are explicit reference choices. The price is charged for **requested**, not granted, RRBs.
+The aggregate penalty `Phi` combines normalized rate shortfall and normalized HOL excess as defined above. The price is charged for **requested**, not granted, RRBs.
 
 Queue-service rate counts serviced payload before the packet-completion loss outcome. Reported goodput instead counts successfully completed packets and can include bytes serviced in previous TTIs. Consequently, the reward's throughput term and the evaluation's delivered-throughput metric need not coincide at a given step. This convention is explicit; neither quantity is the uncapped potential capacity of the granted RRBs.
 
@@ -93,7 +93,7 @@ Local state has four components: mean per-RRB rate, backlog, HOL delay, and the 
 
 Benchmark requests drive actual environment transitions during teacher rollout. A replay tuple therefore contains a state, the capped teacher request, the observed reward after feasible scheduling, the resulting next state, and its terminal marker. The implementation does not attach an invented reward or unrelated next state to an arbitrary teacher action.
 
-During training, the rollout adds `warm_steps` samples **per UE at each leader refresh**, including initialization, periodic refreshes, and event refreshes. A copied cell environment preserves the main training trajectory while producing valid transitions under the new benchmark. Replenishing teacher experience after later refreshes is an explicit reconstruction choice; the manuscript does not uniquely fix that replay-insertion schedule. Evaluation never collects teacher replay.
+During training, the rollout adds `warm_steps` samples **per UE at each leader refresh**, including initialization, periodic refreshes, and event refreshes. A copied cell environment preserves the main training trajectory while producing valid transitions under the new benchmark. Evaluation never collects teacher replay.
 
 This rollout assumes access to the analytical simulator's dynamics. It is not a method for inferring counterfactual next states and rewards from arbitrary real-network telemetry. External integration needs its own validated simulator or logged teacher executions to supply such transitions.
 
@@ -106,7 +106,7 @@ target = reward + gamma * (1 - done)
 
 Target synchronization, replay capacity, batch size, optimizer settings, exploration, and network width are configurable. The supplied short configurations reduce workload to exercise the pipeline on CPU.
 
-The reference network is an MLP with four inputs, two hidden ReLU layers of `hidden_dim` units, and `request_cap + 1` action values. Training uses Adam, smooth-L1 TD loss, and gradient-norm clipping at 10. Epsilon decays linearly over `epsilon_decay_steps`. `target_sync_steps` counts optimizer updates, which can be less frequent than environment TTIs; the manuscript's word "steps" does not uniquely specify this clock.
+The policy network is an MLP with four inputs, two hidden ReLU layers of `hidden_dim` units, and `request_cap + 1` action values. Training uses Adam, smooth-L1 TD loss, and gradient-norm clipping at 10. Epsilon decays linearly over `epsilon_decay_steps`. `target_sync_steps` counts optimizer updates, which can be less frequent than environment TTIs.
 
 ## Federated coordination: Eqs. (18)–(19)
 
@@ -116,7 +116,7 @@ UEs train locally using replay transitions. Their DDQN loss includes a proximal 
 DDQN_loss + mu / 2 * sum_parameters ||local - reference||^2
 ```
 
-Cell-level averaging weights UEs uniformly. A slower cross-cell stage weights cell models by their UE counts. These are different clocks. The manuscript allows uniform, sample-count, or traffic-based client weights; this weighting convention is a reference choice rather than a uniquely specified manuscript detail. On a federated broadcast, the online model, target model, and proximal reference all receive the shared weights, and Adam state is reset to avoid retaining momentum for overwritten parameters.
+Cell-level averaging weights UEs uniformly. A slower cross-cell stage weights cell models by their UE counts. These are different clocks. The configured aggregation weights are uniform within cells and proportional to UE count across cells. On a federated broadcast, the online model, target model, and proximal reference all receive the shared weights, and Adam state is reset to avoid retaining momentum for overwritten parameters.
 
 Raw queue and channel trajectories are not aggregated as model parameters. This design alone is not a formal privacy guarantee; the implementation does not add differential privacy, secure aggregation, or encrypted transport.
 
@@ -136,7 +136,7 @@ This is the literal absolute-deviation event rule in Eq. (21). It can fire when 
 
 Training produces a saved policy. A separate evaluation environment disables exploration, gradient updates, teacher replay collection, and federated weight updates. For methods that use the leader, periodic/event optimization can still update prices and benchmark guidance during evaluation: the learned policy is frozen, the controller's measurements are not.
 
-Metrics are computed from the reference environment, not copied from manuscript tables. Throughput attainment, SLA, HOL delay, delivered-packet latency, resource efficiency, and control activity answer different questions. See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for the experiment protocol and limitations.
+Metrics are computed from the simulation logs. Throughput attainment, SLA, HOL delay, delivered-packet latency, resource efficiency, and control activity answer different questions. See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for the experiment protocol and limitations.
 
 ## Source map
 

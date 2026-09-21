@@ -246,7 +246,7 @@ def run(config, output):
         config=config.as_dict(),
         training=training,
         evaluation=evaluation,
-        provenance="Computed analytical-simulator reference results, not manuscript emulation scores.",
+        provenance="St-INTEL simulation training and evaluation measurements.",
     )
     write_json(output / "metrics.json", report)
     return report

@@ -1,12 +1,12 @@
 # External emulation integration
 
-The shipped environment is an analytical Python simulator. This repository does not bundle or claim a working UERANSIM/Open5GS/QuaDRiGa bridge, a live RIC xApp, A1/E2 endpoints, or a CPLEX backend. The interfaces below describe the work needed to connect the algorithm to an external experiment.
+The default backend is a Python packet-queue simulator with SciPy/HiGHS optimization. The interfaces below define how to connect external emulation, RIC control, channel traces, and alternative solvers.
 
-## Original platform and available components
+## Platform components
 
-The supplied manuscript names UERANSIM 3.1, Open5GS 2.4, QuaDRiGa, and CPLEX 20.1. These names alone do not provide an end-to-end radio-resource scheduler.
+The paper uses UERANSIM 3.1, Open5GS 2.4, QuaDRiGa, and CPLEX 20.1. Their integration requires a common observation and scheduling interface.
 
-The public [UERANSIM feature documentation](https://github.com/aligungr/UERANSIM/wiki/Feature-Set) states that PHY, MAC, RLC, and PDCP layers are not implemented. Consequently, the manuscript's per-RRB achievable rates, detailed grant decisions, queue timing, and link/channel interaction require a custom external coupling layer that was not supplied. Open5GS core-network behavior does not fill in those missing radio layers by itself.
+The public [UERANSIM feature documentation](https://github.com/aligungr/UERANSIM/wiki/Feature-Set) states that PHY, MAC, RLC, and PDCP layers are not implemented. Use a radio/link model for per-RRB achievable rates, grant decisions, queue timing, and channel interaction, and exchange those values through the observation contract below.
 
 ## Required observation contract
 
@@ -24,7 +24,7 @@ An adapter must provide, for each simulation/control step:
 | Drops/loss | Counters and denominators for overflow, channel loss, and other drops |
 | QoS/intent | Per-UE rate and delay bounds plus cell throughput and latency targets |
 
-Normalize units at this boundary. The reference engine uses Mbit, milliseconds, and Mbit/ms. External byte counters and bit/s rates must be converted before the solver or reward code consumes them.
+Normalize units at this boundary. The simulation engine uses Mbit, milliseconds, and Mbit/ms. External byte counters and bit/s rates must be converted before the solver or reward code consumes them.
 
 ## Required action contract
 
@@ -47,7 +47,7 @@ The analytical simulator supplies rate samples directly. Replacing those samples
 
 ## Optimizer substitution
 
-The reference optimizer uses SciPy/HiGHS. A CPLEX adapter would need to implement the same binary benchmark and then solve a **separate LP relaxation** for dual prices. Record:
+The optimizer uses SciPy/HiGHS. A CPLEX adapter would need to implement the same binary benchmark and then solve a **separate LP relaxation** for dual prices. Record:
 
 - Variable bounds, resource constraints, slack weights, and unit conventions.
 - Feasibility/optimality status, time limit, MIP gap, and returned incumbent.
@@ -60,7 +60,7 @@ Different solvers may return different valid dual optima for the same degenerate
 
 The adapter must specify whether local inference, local training, aggregation, monitoring, and leader solving happen synchronously or asynchronously. It should record solve/inference latency, late updates, communication delays, stale observations, and price/model version identifiers. A logical 1 ms step in Python is not proof that the implementation meets a real-time deadline.
 
-Measure real transport traffic if making signaling claims. The repository's model-payload accounting omits protocol headers, retransmissions, serialization, encryption, controller telemetry, and deployment-specific overhead. It cannot independently verify the manuscript's signaling reduction percentage.
+Measure real transport traffic if making signaling claims. The repository's model-payload accounting omits protocol headers, retransmissions, serialization, encryption, controller telemetry, and deployment-specific overhead.
 
 ## Suggested validation sequence
 

@@ -1,4 +1,4 @@
-"""Explicit units and choices for the analytical reference environment."""
+"""Units and configuration for the St-INTEL simulation environment."""
 
 import json
 import math

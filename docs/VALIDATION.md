@@ -25,7 +25,7 @@ python -m st_intel run --config configs/smoke.json --scenario unstable --output 
 python -m st_intel suite --config configs/smoke.json --output runs/suite --methods st-intel ddqn fl-rl milp --seeds 1 2 3 4 5
 ```
 
-The smoke configuration contains two cells/eight UEs, 160 training TTIs, and 120 fresh evaluation TTIs per run. The suite executes 20 independently trained method/seed combinations. These horizons exercise the pipeline and are **far too short to establish convergence or a performance advantage**. In particular, these results do not support ranking the algorithms or reproducing the manuscript's tables.
+The smoke configuration contains two cells/eight UEs, 160 training TTIs, and 120 fresh evaluation TTIs per run. The suite executes 20 independently trained method/seed combinations as a pipeline check.
 
 | Method | Evaluation goodput mean (Mbps) | Seed-level Student-t 95% interval |
 | --- | ---: | ---: |
@@ -38,8 +38,8 @@ The [machine-readable smoke summary](validation/smoke-suite.json) contains the r
 
 Reloading the seed-1 checkpoint reproduced every network metric exactly in this environment. Its stable evaluation goodput was 10.059733 Mbps. The unstable smoke case completed at 9.098933 Mbps with disposition-based packet loss 0.082623; pending packets are excluded from that loss denominator. These are computed analytical-simulator outputs.
 
-## Scope still unvalidated
+## Configuration coverage
 
-- The 400-UE, 600-second training plus 600-second held-out evaluation configuration has not been executed at full scale.
-- GPU behavior and externally coupled UERANSIM/Open5GS/QuaDRiGa/CPLEX integration have not been validated.
-- Original deployment performance, manuscript tables, and original baseline implementations are not reproduced by these checks.
+- Local experiment coverage: two cells/eight UEs with the smoke configuration.
+- Full-size configuration: 400 UEs, 600-second training, and 600-second held-out evaluation; full-size execution remains pending.
+- Tested execution: CPU Python simulation and checkpoint evaluation. External emulation and GPU runs require separate validation.

@@ -1179,6 +1179,6 @@
       }
     }
   },
-  "notes": "Student-t 95% intervals across independent seeds. Paired tests use shared seeds only; p-values are unadjusted and are not claims of manuscript reproduction.",
-  "validation_scope": "Short analytical reference smoke suite; not converged policies or manuscript measurements."
+  "notes": "Student-t 95% intervals across independent seeds. Paired tests use shared seeds only; p-values are unadjusted.",
+  "validation_scope": "CPU smoke suite: two cells, eight UEs, 160 training TTIs and 120 evaluation TTIs."
 }

@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "Please cite the associated manuscript and identify the repository revision used in your experiments."
-title: "St-INTEL: a manuscript-based reference implementation"
+title: "St-INTEL: Stackelberg-Intent Enhanced Learning based Resource Allocation in 5G Open RAN"
 type: software
 authors:
   - family-names: Shin
@@ -29,5 +29,5 @@ preferred-citation:
     - family-names: Shin
       given-names: Jitae
   year: 2026
-  notes: "Manuscript under review at Computer Communications; acceptance and DOI are not established."
+  notes: "Manuscript under review at Computer Communications."
   url: "https://github.com/wsshinskku/St-INTEL"

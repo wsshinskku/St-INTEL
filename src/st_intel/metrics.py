@@ -102,7 +102,7 @@ class Metrics:
             network=summarize(self.totals, self.minimum, self.limits, bandwidth * len(cells)),
             cells=cells,
             traffic=traffic,
-            metric_notes="Goodput counts successful completed packets; HOL includes empty-queue zeros; packet latency weights delivered packets. These are analytical simulator outputs, not manuscript benchmark scores.",
+            metric_notes="Goodput counts successful completed packets; HOL includes empty-queue zeros; packet latency weights delivered packets.",
         )
 
 

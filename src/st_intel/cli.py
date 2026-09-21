@@ -74,12 +74,14 @@ def summarize(paths, metric=None):
         configuration=comparison_config,
         metrics=summaries,
         paired_st_intel_minus_control=comparisons,
-        notes="Student-t 95% intervals across independent seeds. Paired tests use shared seeds only; p-values are unadjusted and are not claims of manuscript reproduction.",
+        notes="Student-t 95% intervals across independent seeds. Paired tests use shared seeds only; p-values are unadjusted.",
     )
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="St-INTEL analytical reference experiments")
+    parser = argparse.ArgumentParser(
+        description="St-INTEL optimization and federated learning experiments"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     for command in ("run", "suite"):
         p = sub.add_parser(command)

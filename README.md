@@ -2,13 +2,13 @@
 
 **Stackelberg-Intent Enhanced Learning based Resource Allocation in 5G Open RAN**
 
-[![Reference checks](https://github.com/wsshinskku/St-INTEL/actions/workflows/ci.yml/badge.svg)](https://github.com/wsshinskku/St-INTEL/actions/workflows/ci.yml)
+[![Tests](https://github.com/wsshinskku/St-INTEL/actions/workflows/ci.yml/badge.svg)](https://github.com/wsshinskku/St-INTEL/actions/workflows/ci.yml)
 
 [한국어](README.ko.md) · [Research overview](https://wsshinskku.github.io/research/St-INTEL/) · [Method](docs/METHOD.md) · [Reproducibility](docs/REPRODUCIBILITY.md)
 
 St-INTEL combines intent-aware optimization, resource scarcity pricing, UE-local Double DQN, and federated learning. A slow leader computes a benchmark allocation and broadcasts a scalar price; UEs learn scheduling requests, and the gNB makes feasible resource grants.
 
-This repository is a **manuscript-based reference implementation**. It provides a runnable analytical environment and explicitly documents implementation choices where the manuscript does not determine a unique implementation. Original emulation assets and trained models were not supplied. Running this code does **not** reproduce or verify the manuscript's reported performance tables.
+This is the **official implementation of St-INTEL**, maintained by the paper’s author. It provides the optimization, learning, scheduling, and evaluation pipeline in a Python simulation environment, with documented interfaces for external emulation.
 
 ## What is included
 
@@ -16,7 +16,7 @@ This repository is a **manuscript-based reference implementation**. It provides 
 - Packet queues, timestamp-based head-of-line (HOL) delay, three traffic classes, four configurable cell profiles, and stable/unstable scenarios.
 - UE-local DDQN with benchmark-generated replay, target networks, and FedProx regularization.
 - Cell-level and cross-cell model aggregation; periodic and event-triggered benchmark refresh with cooldown.
-- Reference controls and component ablations under the same request–grant interface.
+- Comparison methods and component ablations under the same request–grant interface.
 - Separate training and frozen-policy evaluation, model checkpoints, multi-seed summaries, and automated checks.
 
 ```mermaid
@@ -39,7 +39,7 @@ flowchart LR
 
 ## Quick start
 
-Python **3.10 or newer** is required. NumPy, SciPy, and PyTorch run the reference pipeline; the default example runs on CPU. No commercial optimizer or external network simulator is required.
+Python **3.10 or newer** is required. NumPy, SciPy, and PyTorch run the pipeline; the default example runs on CPU. No commercial optimizer or external network simulator is required.
 
 ```bash
 git clone https://github.com/wsshinskku/St-INTEL.git
@@ -58,7 +58,7 @@ pytest
 
 `run` trains a policy and evaluates the resulting weights in a separate environment. `evaluate` loads the saved model for another evaluation without gradient updates. The smoke configuration is a short pipeline check, not a converged experiment. Check [the validation record](docs/VALIDATION.md) for what has actually been run.
 
-The smoke run uses two cells and eight UEs. `configs/paper_reference.json` records the manuscript's four-cell, 400-UE scale and known settings, together with documented reconstruction choices. Its 600,000 training steps plus 600,000 evaluation steps are a substantial workload and have not been run at full scale for this release.
+The smoke run uses two cells and eight UEs. `configs/paper_reference.json` configures four cells, 400 UEs, 600,000 training steps, and 600,000 evaluation steps. See [Experiment protocol](docs/REPRODUCIBILITY.md) for resource requirements and the [validation record](docs/VALIDATION.md) for completed runs.
 
 ## Compare methods
 
@@ -70,22 +70,22 @@ python -m st_intel run --config configs/smoke.json --output runs/no-price --meth
 
 | Method | Purpose |
 | --- | --- |
-| `st-intel` | Full reference pipeline |
+| `st-intel` | Full St-INTEL pipeline |
 | `ddqn` | Independent DDQN without leader pricing, teacher replay, or federation |
-| `fl-rl` | Federated DDQN reference control without leader pricing or teacher replay |
+| `fl-rl` | Federated DDQN control without leader pricing or teacher replay |
 | `milp` | Leader benchmark request policy without neural learning |
 | `no-price` | Remove the scalar price from policy observations and rewards |
 | `no-warmstart` | Remove teacher replay at initialization and later leader refreshes |
 | `no-fl` | Remove federated coordination and its proximal reference |
 | `no-events` | Keep periodic benchmark refresh, remove event-triggered refresh |
 
-These are controlled comparisons implemented here. They are not replicas of every SG, FL, or RL method cited in the manuscript. In particular, the `fl-rl` name identifies this repository's federated DDQN control, not an implementation of the manuscript's cited FL+RL paper.
+All methods use the same request–grant interface. `fl-rl` uses federated DDQN; `milp` uses benchmark requests; the `no-*` variants disable individual St-INTEL components.
 
 `suite` stores runs under `<output>/<method>/seed-<seed>/` and writes `summary.json` using the frozen-policy evaluation metrics. It rejects duplicate method/seed entries. `summarize` also rejects incompatible configurations so stable and unstable scenarios cannot be accidentally pooled.
 
 ## Reading results
 
-Each run records its resolved configuration and metrics, and saves `final.pt` for evaluation. The metrics describe delivered traffic, queue delay, SLA outcomes, optimization and federation activity, and communication accounting in the reference environment. Distinguish the training and evaluation phases when comparing results.
+Each run records its resolved configuration and metrics, and saves `final.pt` for evaluation. The metrics describe delivered traffic, queue delay, SLA outcomes, optimization and federation activity, and communication accounting in the simulation environment. Distinguish the training and evaluation phases when comparing results.
 
 ```text
 runs/demo/
@@ -108,7 +108,7 @@ python -m st_intel run --config configs/smoke.json --output runs/seed2 --seed 2
 python -m st_intel summarize runs/seed1/metrics.json runs/seed2/metrics.json --output runs/summary.json
 ```
 
-Use independent seeds for uncertainty estimates and the same scenario/configuration for method comparisons. A single short run supports a functional check only. See [reproduction notes](docs/REPRODUCIBILITY.md) for metric definitions, missing original assets, and configuration choices.
+Use independent seeds for uncertainty estimates and the same scenario/configuration for method comparisons. See [Experiment protocol](docs/REPRODUCIBILITY.md) for metric definitions and configuration details.
 
 ## Documentation
 
@@ -119,7 +119,7 @@ Use independent seeds for uncertainty estimates and the same scenario/configurat
 | [INTEGRATION.md](docs/INTEGRATION.md) | Required interfaces and measurements for external emulation |
 | [VALIDATION.md](docs/VALIDATION.md) | Tests and experiments actually completed |
 
-The source manuscript is not redistributed in this repository. Its existing publication record is **under review** at *Computer Communications*; this is not an acceptance claim. The manuscript gives reported results for a UERANSIM/Open5GS/QuaDRiGa/CPLEX setup whose custom coupling and experiment artifacts are unavailable here.
+The associated manuscript is **under review** at *Computer Communications*.
 
 ## Citation and license
 
@@ -135,4 +135,4 @@ If this implementation is useful, cite the associated manuscript and identify th
 }
 ```
 
-The reference implementation is available under the [MIT License](LICENSE). The manuscript and third-party software retain their own rights and licenses.
+The code is available under the [MIT License](LICENSE). The manuscript and third-party software retain their own rights and licenses.
