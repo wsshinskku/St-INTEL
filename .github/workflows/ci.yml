@@ -1,4 +1,4 @@
-name: Reference implementation checks
+name: St-INTEL checks
 on:
   push:
   pull_request:
